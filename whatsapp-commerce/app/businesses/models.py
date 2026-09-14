@@ -1,6 +1,67 @@
 from app.extensions import db
 from app.core.base_model import gen_uuid, TimestampMixin
 
+DEFAULT_CAPABILITIES = {
+    'RESTAURANT': {
+        'catalog': True,
+        'variants': False,
+        'modifiers': True,
+        'inventory': True,
+        'scheduled_orders': True,
+        'pickup': True,
+        'delivery': True
+    },
+    'RETAIL': {
+        'catalog': True,
+        'variants': True,
+        'modifiers': False,
+        'inventory': True,
+        'scheduled_orders': False,
+        'pickup': True,
+        'delivery': True
+    },
+    'BAKERY': {
+        'catalog': True,
+        'variants': True,
+        'modifiers': True,
+        'inventory': True,
+        'scheduled_orders': True,
+        'pickup': True,
+        'delivery': True
+    },
+    'PHARMACY': {
+        'catalog': True,
+        'variants': False,
+        'modifiers': False,
+        'inventory': True,
+        'prescription_required': True,
+        'pickup': True,
+        'delivery': True
+    },
+    'SERVICES': {
+        'catalog': True,
+        'appointments': True,
+        'inventory': False,
+        'pickup': False,
+        'delivery': False
+    },
+    'WHOLESALE': {
+        'catalog': True,
+        'tiered_pricing': True,
+        'inventory': True,
+        'delivery': True
+    },
+    'OTHER': {
+        'catalog': True,
+        'variants': True,
+        'modifiers': False,
+        'inventory': True,
+        'pickup': True,
+        'delivery': True
+    }
+}
+
+
 class Business(db.Model, TimestampMixin):
     __tablename__ = 'businesses'
 
@@ -12,6 +73,8 @@ class Business(db.Model, TimestampMixin):
         db.ForeignKey('users.id', ondelete='RESTRICT'),
         nullable=False
     )
+    business_type = db.Column(db.String(50), default='RETAIL', nullable=False)
+    capabilities = db.Column(db.JSON, nullable=True)
     currency = db.Column(db.String(3), default='GHS', nullable=False)
     phone = db.Column(db.String(20))
     email = db.Column(db.String(255))
@@ -39,11 +102,17 @@ class Business(db.Model, TimestampMixin):
     )
 
     def to_dict(self):
+        caps = self.capabilities or DEFAULT_CAPABILITIES.get(
+            (self.business_type or 'RETAIL').upper(),
+            DEFAULT_CAPABILITIES['OTHER']
+        )
         return {
             'id': self.id,
             'name': self.name,
             'slug': self.slug,
             'owner_id': self.owner_id,
+            'business_type': self.business_type,
+            'capabilities': caps,
             'currency': self.currency,
             'phone': self.phone,
             'email': self.email,

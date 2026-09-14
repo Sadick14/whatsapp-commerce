@@ -26,6 +26,7 @@ class Order(db.Model, TimestampMixin, TenantMixin):
     delivery_address = db.Column(db.Text)
     delivery_notes = db.Column(db.Text)
     notes = db.Column(db.Text)
+    metadata_json = db.Column(db.JSON, nullable=True)
 
     customer = db.relationship('Customer', back_populates='orders')
     items = db.relationship('OrderItem', back_populates='order', cascade='all, delete-orphan')
@@ -55,6 +56,7 @@ class Order(db.Model, TimestampMixin, TenantMixin):
             'delivery_address': self.delivery_address,
             'delivery_notes': self.delivery_notes,
             'notes': self.notes,
+            'metadata': self.metadata_json,
             'items': [item.to_dict() for item in self.items],
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
@@ -81,6 +83,7 @@ class OrderItem(db.Model):
     quantity = db.Column(db.Integer, nullable=False)
     unit_price = db.Column(db.Numeric(10, 2), nullable=False)
     total_price = db.Column(db.Numeric(10, 2), nullable=False)
+    metadata_json = db.Column(db.JSON, nullable=True)
 
     order = db.relationship('Order', back_populates='items')
     product = db.relationship('Product')
@@ -93,5 +96,6 @@ class OrderItem(db.Model):
             'product_name': self.product_name,
             'quantity': self.quantity,
             'unit_price': float(self.unit_price) if self.unit_price is not None else 0.0,
-            'total_price': float(self.total_price) if self.total_price is not None else 0.0
+            'total_price': float(self.total_price) if self.total_price is not None else 0.0,
+            'metadata': self.metadata_json
         }

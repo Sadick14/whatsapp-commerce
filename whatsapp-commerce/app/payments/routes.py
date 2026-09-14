@@ -180,7 +180,7 @@ def get_payment_config():
 @require_tenant(min_role='ADMIN')
 def set_payment_config():
     """
-    Configure Payment Gateway Settings (e.g. Paystack)
+    Configure Payment Gateway Settings (Paystack / PayPal)
     ---
     tags:
       - Payments
@@ -206,6 +206,15 @@ def set_payment_config():
               type: string
             subaccount_code:
               type: string
+            paypal_email:
+              type: string
+            paypal_client_id:
+              type: string
+            paypal_client_secret:
+              type: string
+            paypal_mode:
+              type: string
+              default: sandbox
             is_active:
               type: boolean
               default: true
@@ -220,6 +229,10 @@ def set_payment_config():
         public_key=data.get('public_key'),
         secret_key=data.get('secret_key'),
         subaccount_code=data.get('subaccount_code'),
+        paypal_email=data.get('paypal_email'),
+        paypal_client_id=data.get('paypal_client_id'),
+        paypal_client_secret=data.get('paypal_client_secret'),
+        paypal_mode=data.get('paypal_mode', 'sandbox'),
         is_active=data.get('is_active', True)
     )
     return jsonify(config=config.to_dict()), 200

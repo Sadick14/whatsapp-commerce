@@ -6,10 +6,14 @@ class BusinessPaymentConfig(db.Model, TimestampMixin, TenantMixin):
     __tablename__ = 'business_payment_configs'
 
     id = db.Column(db.String(36), primary_key=True, default=gen_uuid)
-    provider = db.Column(db.String(50), default='PAYSTACK', nullable=False)
+    provider = db.Column(db.String(50), default='PAYSTACK', nullable=False)  # PAYSTACK, PAYPAL, MANUAL
     public_key = db.Column(db.String(255))
     secret_key_encrypted = db.Column(db.Text)
     subaccount_code = db.Column(db.String(100))
+    paypal_email = db.Column(db.String(255))
+    paypal_client_id = db.Column(db.String(255))
+    paypal_client_secret_encrypted = db.Column(db.Text)
+    paypal_mode = db.Column(db.String(20), default='sandbox')  # sandbox, live
     is_active = db.Column(db.Boolean, default=True, nullable=False)
 
     business = db.relationship('Business', back_populates='payment_config')
@@ -25,6 +29,9 @@ class BusinessPaymentConfig(db.Model, TimestampMixin, TenantMixin):
             'provider': self.provider,
             'public_key': self.public_key,
             'subaccount_code': self.subaccount_code,
+            'paypal_email': self.paypal_email,
+            'paypal_client_id': self.paypal_client_id,
+            'paypal_mode': self.paypal_mode,
             'is_active': self.is_active,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }

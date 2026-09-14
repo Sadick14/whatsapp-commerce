@@ -10,7 +10,10 @@ class PaymentService:
 
     @staticmethod
     def set_payment_config(business_id, provider='PAYSTACK', public_key=None,
-                           secret_key=None, subaccount_code=None, is_active=True):
+                           secret_key=None, subaccount_code=None,
+                           paypal_email=None, paypal_client_id=None,
+                           paypal_client_secret=None, paypal_mode='sandbox',
+                           is_active=True):
         config = BusinessPaymentConfig.query.filter_by(business_id=business_id).first()
         if not config:
             config = BusinessPaymentConfig(
@@ -19,6 +22,10 @@ class PaymentService:
                 public_key=public_key,
                 secret_key_encrypted=secret_key,
                 subaccount_code=subaccount_code,
+                paypal_email=paypal_email,
+                paypal_client_id=paypal_client_id,
+                paypal_client_secret_encrypted=paypal_client_secret,
+                paypal_mode=paypal_mode,
                 is_active=is_active
             )
             db.session.add(config)
@@ -30,6 +37,14 @@ class PaymentService:
                 config.secret_key_encrypted = secret_key
             if subaccount_code is not None:
                 config.subaccount_code = subaccount_code
+            if paypal_email is not None:
+                config.paypal_email = paypal_email
+            if paypal_client_id is not None:
+                config.paypal_client_id = paypal_client_id
+            if paypal_client_secret is not None:
+                config.paypal_client_secret_encrypted = paypal_client_secret
+            if paypal_mode is not None:
+                config.paypal_mode = paypal_mode
             config.is_active = is_active
 
         db.session.commit()
