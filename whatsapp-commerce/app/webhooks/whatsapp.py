@@ -7,6 +7,31 @@ whatsapp_webhook_bp = Blueprint('whatsapp_webhook', __name__, url_prefix='/api/v
 
 @whatsapp_webhook_bp.route('', methods=['GET'])
 def verify_webhook():
+    """
+    Verify WhatsApp Webhook Endpoint
+    ---
+    tags:
+      - Webhooks
+    parameters:
+      - name: hub.mode
+        in: query
+        type: string
+        required: true
+        example: subscribe
+      - name: hub.verify_token
+        in: query
+        type: string
+        required: true
+      - name: hub.challenge
+        in: query
+        type: string
+        required: true
+    responses:
+      200:
+        description: Returns challenge string on successful verification
+      403:
+        description: Token mismatch error
+    """
     mode = request.args.get('hub.mode')
     token = request.args.get('hub.verify_token')
     challenge = request.args.get('hub.challenge')
@@ -20,6 +45,21 @@ def verify_webhook():
 
 @whatsapp_webhook_bp.route('', methods=['POST'])
 def receive_webhook():
+    """
+    Receive Inbound WhatsApp Cloud API Events
+    ---
+    tags:
+      - Webhooks
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+    responses:
+      200:
+        description: Webhook event processed or ignored
+    """
     payload = request.get_json() or {}
     result = WhatsAppRouter.handle_incoming_event(payload)
 

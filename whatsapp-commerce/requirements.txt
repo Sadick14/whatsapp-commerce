@@ -8,3 +8,4 @@ python-dotenv==1.0.1
 Werkzeug==3.0.3
 pytest==8.2.0
 requests==2.32.0
+flasgger==0.9.7.1
