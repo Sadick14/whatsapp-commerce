@@ -7,6 +7,30 @@ payments_webhook_bp = Blueprint('payments_webhook', __name__, url_prefix='/api/v
 
 @payments_webhook_bp.route('/paystack', methods=['POST'])
 def paystack_webhook():
+    """
+    Paystack Payment Webhook Callback
+    ---
+    tags:
+      - Webhooks
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          properties:
+            event:
+              type: string
+              example: charge.success
+            data:
+              type: object
+              properties:
+                reference:
+                  type: string
+    responses:
+      200:
+        description: Webhook processed and payment settled if matching reference found
+    """
     payload = request.get_json() or {}
     event = payload.get('event')
     data = payload.get('data', {})

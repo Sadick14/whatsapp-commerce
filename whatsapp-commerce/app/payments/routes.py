@@ -8,6 +8,36 @@ payments_bp = Blueprint('payments', __name__, url_prefix='/api/v1/payments')
 @payments_bp.route('', methods=['GET'])
 @require_tenant(min_role='STAFF')
 def list_payments():
+    """
+    List Payments
+    ---
+    tags:
+      - Payments
+    security:
+      - Bearer: []
+    parameters:
+      - name: X-Business-ID
+        in: header
+        type: string
+        required: true
+      - name: order_id
+        in: query
+        type: string
+      - name: status
+        in: query
+        type: string
+      - name: limit
+        in: query
+        type: integer
+        default: 50
+      - name: offset
+        in: query
+        type: integer
+        default: 0
+    responses:
+      200:
+        description: List of payment transactions
+    """
     order_id = request.args.get('order_id')
     status = request.args.get('status')
     limit = int(request.args.get('limit', 50))
@@ -31,6 +61,51 @@ def list_payments():
 @payments_bp.route('/record', methods=['POST'])
 @require_tenant(min_role='STAFF')
 def record_payment():
+    """
+    Record Payment Transaction
+    ---
+    tags:
+      - Payments
+    security:
+      - Bearer: []
+    parameters:
+      - name: X-Business-ID
+        in: header
+        type: string
+        required: true
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required:
+            - order_id
+            - amount
+            - reference
+          properties:
+            order_id:
+              type: string
+            amount:
+              type: number
+            reference:
+              type: string
+            provider:
+              type: string
+              default: MANUAL
+            payment_method:
+              type: string
+              default: CASH
+            status:
+              type: string
+              default: SUCCESS
+            details:
+              type: object
+    responses:
+      201:
+        description: Payment recorded and order payment status updated
+      400:
+        description: Missing required fields
+    """
     data = request.get_json() or {}
     order_id = data.get('order_id')
     amount = data.get('amount')
@@ -54,6 +129,26 @@ def record_payment():
 @payments_bp.route('/<payment_id>', methods=['GET'])
 @require_tenant(min_role='STAFF')
 def get_payment(payment_id):
+    """
+    Get Payment Transaction Details
+    ---
+    tags:
+      - Payments
+    security:
+      - Bearer: []
+    parameters:
+      - name: X-Business-ID
+        in: header
+        type: string
+        required: true
+      - name: payment_id
+        in: path
+        type: string
+        required: true
+    responses:
+      200:
+        description: Payment details
+    """
     payment = PaymentService.get_payment(g.business_id, payment_id)
     return jsonify(payment=payment.to_dict()), 200
 
@@ -61,6 +156,22 @@ def get_payment(payment_id):
 @payments_bp.route('/config', methods=['GET'])
 @require_tenant(min_role='ADMIN')
 def get_payment_config():
+    """
+    Get Business Payment Provider Configuration
+    ---
+    tags:
+      - Payments
+    security:
+      - Bearer: []
+    parameters:
+      - name: X-Business-ID
+        in: header
+        type: string
+        required: true
+    responses:
+      200:
+        description: Payment config details
+    """
     config = PaymentService.get_payment_config(g.business_id)
     return jsonify(config=config.to_dict() if config else None), 200
 
@@ -68,6 +179,40 @@ def get_payment_config():
 @payments_bp.route('/config', methods=['POST'])
 @require_tenant(min_role='ADMIN')
 def set_payment_config():
+    """
+    Configure Payment Gateway Settings (e.g. Paystack)
+    ---
+    tags:
+      - Payments
+    security:
+      - Bearer: []
+    parameters:
+      - name: X-Business-ID
+        in: header
+        type: string
+        required: true
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          properties:
+            provider:
+              type: string
+              default: PAYSTACK
+            public_key:
+              type: string
+            secret_key:
+              type: string
+            subaccount_code:
+              type: string
+            is_active:
+              type: boolean
+              default: true
+    responses:
+      200:
+        description: Payment settings updated
+    """
     data = request.get_json() or {}
     config = PaymentService.set_payment_config(
         business_id=g.business_id,

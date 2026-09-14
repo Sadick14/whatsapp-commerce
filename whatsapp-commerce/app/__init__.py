@@ -2,7 +2,7 @@ import os
 from flask import Flask, jsonify
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
-from app.extensions import db, migrate, jwt
+from app.extensions import db, migrate, jwt, swagger
 from app.config import config
 from app.core.exceptions import AppError
 import app.models  # noqa: F401
@@ -19,15 +19,57 @@ def set_sqlite_pragmas(dbapi_connection, connection_record):
         cur.close()
 
 
+swagger_config = {
+    "headers": [],
+    "specs": [
+        {
+            "endpoint": 'apispec',
+            "route": '/api/docs.json',
+            "rule_filter": lambda rule: True,
+            "model_filter": lambda tag: True,
+        }
+    ],
+    "static_url_path": "/flasgger_static",
+    "swagger_ui": True,
+    "specs_route": "/api/docs"
+}
+
+swagger_template = {
+    "swagger": "2.0",
+    "info": {
+        "title": "WhatsApp Commerce API",
+        "description": "API documentation for Multi-Tenant WhatsApp E-Commerce Platform",
+        "version": "1.0.0"
+    },
+    "basePath": "/",
+    "securityDefinitions": {
+        "Bearer": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header",
+            "description": "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\""
+        }
+    },
+    "security": [
+        {
+            "Bearer": []
+        }
+    ]
+}
+
+
 def create_app(config_name='default'):
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_object(config[config_name])
     
     os.makedirs(app.instance_path, exist_ok=True)
 
+    app.config['SWAGGER'] = swagger_config
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
+    swagger.template = swagger_template
+    swagger.init_app(app)
 
     register_blueprints(app)
     register_error_handlers(app)
