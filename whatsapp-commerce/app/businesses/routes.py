@@ -10,7 +10,7 @@ businesses_bp = Blueprint('businesses', __name__, url_prefix='/api/v1/businesses
 @jwt_required()
 def create_business():
     """
-    Create a new business workspace
+    Create a new business workspace with optional WhatsApp and PayPal setup
     ---
     tags:
       - Businesses
@@ -32,6 +32,9 @@ def create_business():
             slug:
               type: string
               example: acme-mart
+            business_type:
+              type: string
+              example: RESTAURANT
             currency:
               type: string
               example: GHS
@@ -47,6 +50,30 @@ def create_business():
             logo_url:
               type: string
               example: "https://example.com/logo.png"
+            capabilities:
+              type: object
+            whatsapp_config:
+              type: object
+              properties:
+                phone_number_id:
+                  type: string
+                display_phone_number:
+                  type: string
+                waba_id:
+                  type: string
+                access_token:
+                  type: string
+            paypal_config:
+              type: object
+              properties:
+                paypal_email:
+                  type: string
+                paypal_client_id:
+                  type: string
+                paypal_client_secret:
+                  type: string
+                paypal_mode:
+                  type: string
     responses:
       201:
         description: Business created successfully
@@ -63,7 +90,12 @@ def create_business():
         phone=data.get('phone'),
         email=data.get('email'),
         address=data.get('address'),
-        logo_url=data.get('logo_url')
+        logo_url=data.get('logo_url'),
+        business_type=data.get('business_type', 'RETAIL'),
+        capabilities=data.get('capabilities'),
+        whatsapp_config=data.get('whatsapp_config'),
+        payment_config=data.get('payment_config'),
+        paypal_config=data.get('paypal_config')
     )
     return jsonify(business=business.to_dict()), 201
 
